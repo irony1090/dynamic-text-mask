@@ -1,0 +1,42 @@
+{
+  "name": "@irony0901/dynamic-text-mask",
+  "version": "0.0.1",
+  "description": "A library that helps you write text in the form you want",
+  "browser": "./dist/index.js",
+  "main": "./dist/index.cjs.js",
+  "module": "./dist/index.es.js",
+  "types": "./dist/src/dynamic_text_mask.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/irony1090/dynamic-text-mask"
+  },
+  "author": {
+    "name": "irony19",
+    "email": "strike910901@gmail.com",
+    "url": "https://github.com/irony1090"
+  },
+  "license": "MIT",
+  "scripts": {
+    "build": "rollup -c && tsc --emitDeclarationOnly",
+    "build:c": "rollup -c",
+    "build:dev": "tsc --build ./tsconfig.json",
+    "start:dev": "node ./dev/index.js"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.18.9",
+    "@babel/preset-env": "^7.18.9",
+    "@rollup/plugin-babel": "^5.3.1",
+    "@rollup/plugin-commonjs": "^22.0.1",
+    "@rollup/plugin-node-resolve": "^13.3.0",
+    "rollup": "^2.77.0",
+    "rollup-plugin-typescript2": "^0.32.1",
+    "typescript": "^4.7.4"
+  },
+
+  "keywords": [
+    "text", "format", "mask", "variables"
+  ]
+}

@@ -37,6 +37,8 @@
   },
 
   "keywords": [
-    "text", "format", "mask", "variables"
+    "dynamic", "string", "text", "format", "mask", 
+    "parse string", "string format", 
+    "tel format", "email format"
   ]
 }

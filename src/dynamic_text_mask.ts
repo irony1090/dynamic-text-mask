@@ -8,23 +8,31 @@ type MaskPredictParam = {
 // export type MaskDynamicVal = {
   
 // }
-// const d = {
-//   mask: /[a-z]\w{1,9}/,
-//   filter: ({variable}) => variable.length > 
-// }
-export type MaskVal = {
-  charactorMask: RegExp;
-  length: number | ( (maskParam: MaskPredictParam) => number );
-  emptyChar?: string | ( (maskParam: MaskPredictParam) => string);
+// const els = [
+//   bind([
+//     /[a-z]/,
+//     { mask: /\[a-z]|-|\d/, min: 1 },
+//     { mask: /\w/, min: 1 },
+//   ]),
+// ]
+export type MaskVariable = {
+  mask: RegExp;
+  // length: number | ( (maskParam: MaskPredictParam) => number );
+  // min?: number | ( (maskParam: MaskPredictParam) => number );
+  // exit?: (variable: string, maskParam: MaskPredictParam) => boolean;
+  exit?: (variable: string, maskParam: MaskPredictParam) => boolean;
+  // postExit?: (variable: string, maskParam: MaskPredictParam) => boolean;
+  resultModifier?: (variable: string, maskParam: MaskPredictParam) => string;
+  // emptyChar?: string | ( (maskParam: MaskPredictParam) => string);
 }
 
 export type MaskMayBeParam = {
   flag: (maskParam: MaskPredictParam) => boolean;
-  elements: Array<string | MaskVal>;
+  elements: Array<string | MaskVariable>;
 }
 export type MaskMayBe = (
   flag: (maskParam: MaskPredictParam) => boolean,
-  elements: Array<string | MaskVal>
+  elements: Array<string | MaskVariable>
 ) => MaskMayBeParam 
 
 export const maskMayBe: MaskMayBe = (
@@ -39,14 +47,14 @@ type ReduceResult =  MaskPredictParam & {
   flag: boolean;
   flatIndex: number;
 }
-
-export type MaskElement = string | MaskVal | MaskMayBeParam;
+export type MaskFilter = string | MaskVariable;
+export type MaskElement =  MaskFilter | MaskMayBeParam;
 
 export class DynamicTextMask {
   private format_: Array<MaskElement>;
 
   // private vals: Array<MaskVal>;
-  private flats: Array<string|MaskVal>;
+  private flats: Array<MaskFilter>;
 
   constructor( format: Array<MaskElement> ){
     this.format = format;
@@ -61,7 +69,7 @@ export class DynamicTextMask {
     else 
       throw new Error('Format not modifiable');
 
-    const { flats, vals } = format.reduce( predictReduceVariables, {vals: [], flats: []})
+    const { flats } = format.reduce( predictReduceVariables, {vals: [], flats: []})
     // this.vals = vals;
     this.flats = flats;
   }
@@ -72,38 +80,32 @@ export class DynamicTextMask {
       //   return rst;
 
       if( element instanceof Object){
-        if( 'charactorMask' in element ){
+        if( 'mask' in element ){
           rst.flatIndex++;  // 위치 특정을 위해
-          const {emptyChar: unclear, charactorMask} = element;
-          const emptyChar = parseEmptyChar(unclear, rst);
-          const length = parseLength(element.length, rst);
-          const variable: Array<string> = [];
-          let count = 0;
-          let emptyCount = 0;
+          const { mask, exit, resultModifier } = element;
+          let variable: string = '';
+          
           if( rst.flag ){
-            while( count < length ){
-              const char = rst.remaining[0];
-              if( rst.remaining.length === 0 ){
-                variable.push(emptyChar[emptyCount%emptyChar.length]);
-                emptyCount++;
-                count++;
-              } else if( charactorMask.test(char) ){
-                // console.log('[test]', char);
-                variable.push(char);
-                count++;
-              } else if ( isCharContains(this.flats.slice(rst.flatIndex+1), rst.remaining) ){
-                // console.log('[contains]', char);
-                variable.push(emptyChar[emptyCount%emptyChar.length]);
-                emptyCount++;
-                count++;
-                continue;
-              }
-
+            // let exit: boolean = rst.remaining.length > 0;
+            [...rst.remaining].some( char => {
+              const isExit = exit?.(variable, rst);
+              if( isExit )
+                return true;
+              const test = mask.test(char);
+              if( test )
+                variable += char;
+              else if( isCharContains(this.flats.slice(rst.flatIndex+1), rst.remaining) )
+                return true;
+              // const isExit: boolean = exit?.(variable, rst);
               rst.remaining.splice(0, 1);
               
-            }
-            rst.frames.push( variable.join('') )
-            rst.variables.push( variable.join('') )
+              return false;
+            })
+            const modifiedVariable = resultModifier?.(variable, rst);
+            variable = modifiedVariable !== undefined ? modifiedVariable : variable;
+
+            rst.frames.push( variable )
+            rst.variables.push( variable )
           }else
             rst.variables.push('');
             // rst.frames.push('')
@@ -147,10 +149,10 @@ export class DynamicTextMask {
   }
 }
 
-const isCharContains = (elements: Array<string| MaskVal>, remaining: Array<string>): boolean => 
+const isCharContains = (elements: Array<MaskFilter>, remaining: Array<string>): boolean => 
   elements.some( (element) => {
     if( element instanceof Object )
-      return element.charactorMask.test(remaining[0]);
+      return element.mask.test(remaining[0]);
     else
       return element.length > 1 
         ? element === remaining.slice(0, element.length).join('')
@@ -158,7 +160,7 @@ const isCharContains = (elements: Array<string| MaskVal>, remaining: Array<strin
   })
 
 
-const predictReduceVariables = (rst: { vals: Array<MaskVal>, flats: Array<string|MaskVal> }, element: MaskElement): { vals: Array<MaskVal>, flats: Array<string|MaskVal> } => {
+const predictReduceVariables = (rst: { vals: Array<MaskVariable>, flats: Array<MaskFilter> }, element: MaskElement): { vals: Array<MaskVariable>, flats: Array<MaskFilter> } => {
   if( element instanceof Object ){
     if( 'mask' in element ){
       rst.vals.push(element);
@@ -185,30 +187,69 @@ const parseEmptyChar = (funcOrString: string | ( (maskParam: MaskPredictParam) =
 
 export const createDynamicTextMask = (format: Array<MaskElement>) => new DynamicTextMask(format);
 
-export const telMask = new DynamicTextMask([
+export const telMask = createDynamicTextMask([
   maskMayBe(
     ({origin}) => origin.startsWith('+'),
     [
       '+',
       {
-        charactorMask: /\d/,
-        length: 3
+        mask: /\d/,
+        exit: (variable) => variable.length > 2
       },
       ' '
     ]
   ),
   {
-    charactorMask: /\d/,
-    length: 3
+    mask: /\d/,
+    exit: (variable) => variable.length > 2,
+    resultModifier: (variable, {variables}) => {
+      if( variables[0].length > 0 )
+        return variable.startsWith('0') ? variable.slice(1) : undefined
+      else
+        return undefined;
+    }
   },
   '-',
   {
-    charactorMask: /\d/,
-    length: 4
+    mask: /\d/,
+    exit: (variable) => variable.length > 3
   },
   '-',
   {
-    charactorMask: /\d/,
-    length: 4
+    mask: /\d/,
+    exit: (variable) => variable.length > 3
   }
+])
+
+export const emailMask = createDynamicTextMask([
+  {
+    mask: /\w|\-|\./,
+    exit: ( _, {remaining} ) => remaining[0] === '@'
+  },
+  '@',
+  {
+    mask: /\w/,
+    exit: ( _, {remaining}) => remaining[0] === '.'
+  },
+  '.',
+  {
+    mask: /\w|\./
+  }
+])
+
+export const domainMask = createDynamicTextMask([
+  {
+    mask: /[a-z]/i,
+  },
+  '://',
+  // maskMayBe(
+  //   ({remaining}) => {
+
+  //   },
+  //   {
+  //     mask: /\w|\-/,
+
+  //   }
+  // ),
+
 ])

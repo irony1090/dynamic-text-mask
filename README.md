@@ -16,9 +16,60 @@ $ yarn add @irony0901/dynamic-text-mask
 ```
 
 # Index
-* [ExampleTelMask](#ExampleTelMask)   
-* [ExampleEmailMask](#ExampleEmailMask)   
+* [ExampleEmailMask](#ExampleEmailMask)  
 * [ExampleDomainMask](#ExampleDomainMask)
+* [ExampleTelMask](#ExampleTelMask)   
+ 
+# ExampleEmailMask
+``` javascript
+import { createDynamicTextMask, emailMask } from '@irony0901/dynamic-text-mask';
+// const emailMask = createDynamicTextMask([
+//   { mask: /\w|\-|\./ },  // Result (Property Path: variables[0])
+//   '@',                   // Separator
+//   { mask: /\w|\-|\./ }   // Result (Property Path: variables[1])
+// ])
+
+console.log( emailMask.parse('irony0901@github.com').variables )
+// [ 'irony0901', 'github.com' ]
+
+console.log( emailMask.parse('@github.com').variables )
+// [ '', 'github.com' ]
+
+console.log( emailMask.parse('irony0901').variables )
+// [ 'irony0901', '' ]
+```
+
+# ExampleDomainMask
+``` javascript
+import { createDynamicTextMask, maskMaybe, domainMask } from '@irony0901/dynamic-text-mask';
+// const domainMask = createDynamicTextMask([
+//   { mask: /[a-z]/i },
+//   '://',
+//   { mask: /\w|\-|\./ },
+//   maskMaybe(
+//     ({remaining}) => remaining[0] === '/',
+//     [
+//       '/',
+//       {
+//         mask: /\/|\w|\-/,
+//         exit: ( _, {remaining}) => remaining[0] === '?'
+//       }
+//     ]
+//   ),
+//   '?',
+//   { mask: /./ }
+// ])
+
+console.log( domainMask.parse('https://github.com').variables )
+// [ 'https', 'github.com', '', '' ]
+
+console.log( domainMask.parse('https://github.com/irony1090/dynamic-text-mask?foo=bar&wow=amazing').variables )
+// [ 'https', 'github.com', 'irony1090/dynamic-text-mask', 'foo=bar&wow=amazing' ]
+
+console.log( domainMask.parse('https://github.com/irony1090?foo=bar&wow=amazing').variables )
+// [ 'https', 'github.com', '', 'foo=bar&wow=amazing' ]
+```
+
 # ExampleTelMask
 ``` javascript
 import { createDynamicTextMask, maskMaybe, telMask } from '@irony0901/dynamic-text-mask'
@@ -98,52 +149,3 @@ console.log( strangeResult.variiables )
 
 ```
 
-# ExampleEmailMask
-``` javascript
-import { createDynamicTextMask, emailMask } from '@irony0901/dynamic-text-mask';
-// const emailMask = createDynamicTextMask([
-//   { mask: /\w|\-|\./ },  // Result (Property Path: variables[0])
-//   '@',                   // Separator
-//   { mask: /\w|\-|\./ }   // Result (Property Path: variables[1])
-// ])
-
-console.log( emailMask.parse('irony0901@github.com').variables )
-// [ 'irony0901', 'github.com' ]
-
-console.log( emailMask.parse('@github.com').variables )
-// [ '', 'github.com' ]
-
-console.log( emailMask.parse('irony0901').variables )
-// [ 'irony0901', '' ]
-```
-
-# ExampleDomainMask
-``` javascript
-import { createDynamicTextMask, maskMaybe, domainMask } from '@irony0901/dynamic-text-mask';
-// const domainMask = createDynamicTextMask([
-//   { mask: /[a-z]/i },
-//   '://',
-//   { mask: /\w|\-|\./ },
-//   maskMaybe(
-//     ({remaining}) => remaining[0] === '/',
-//     [
-//       '/',
-//       {
-//         mask: /\/|\w|\-/,
-//         exit: ( _, {remaining}) => remaining[0] === '?'
-//       }
-//     ]
-//   ),
-//   '?',
-//   { mask: /./ }
-// ])
-
-console.log( domainMask.parse('https://github.com').variables )
-// [ 'https', 'github.com', '', '' ]
-
-console.log( domainMask.parse('https://github.com/irony1090/dynamic-text-mask?foo=bar&wow=amazing').variables )
-// [ 'https', 'github.com', 'irony1090/dynamic-text-mask', 'foo=bar&wow=amazing' ]
-
-console.log( domainMask.parse('https://github.com/irony1090?foo=bar&wow=amazing').variables )
-// [ 'https', 'github.com', '', 'foo=bar&wow=amazing' ]
-```

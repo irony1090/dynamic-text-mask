@@ -26,18 +26,18 @@ export type MaskVariable = {
   // emptyChar?: string | ( (maskParam: MaskPredictParam) => string);
 }
 
-export type MaskMayBeParam = {
+export type MaskMaybeParam = {
   flag: (maskParam: MaskPredictParam) => boolean;
   elements: Array<string | MaskVariable>;
 }
-export type MaskMayBe = (
+export type MaskMaybe = (
   flag: (maskParam: MaskPredictParam) => boolean,
   elements: Array<string | MaskVariable>
-) => MaskMayBeParam 
+) => MaskMaybeParam 
 
-export const maskMayBe: MaskMayBe = (
+export const maskMaybe: MaskMaybe = (
   flag, elements
-): MaskMayBeParam => {
+): MaskMaybeParam => {
 
   return { flag, elements };
 }
@@ -48,7 +48,7 @@ type ReduceResult =  MaskPredictParam & {
   flatIndex: number;
 }
 export type MaskFilter = string | MaskVariable;
-export type MaskElement =  MaskFilter | MaskMayBeParam;
+export type MaskElement =  MaskFilter | MaskMaybeParam;
 
 export class DynamicTextMask {
   private format_: Array<MaskElement>;
@@ -188,7 +188,7 @@ const parseEmptyChar = (funcOrString: string | ( (maskParam: MaskPredictParam) =
 export const createDynamicTextMask = (format: Array<MaskElement>) => new DynamicTextMask(format);
 
 export const telMask = createDynamicTextMask([
-  maskMayBe(
+  maskMaybe(
     ({origin}) => origin.startsWith('+'),
     [
       '+',
@@ -202,12 +202,12 @@ export const telMask = createDynamicTextMask([
   {
     mask: /\d/,
     exit: (variable) => variable.length > 2,
-    resultModifier: (variable, {variables}) => {
-      if( variables[0].length > 0 )
-        return variable.startsWith('0') ? variable.slice(1) : undefined
-      else
-        return undefined;
-    }
+    // resultModifier: (variable, {variables}) => {
+    //   if( variables[0].length > 0 )
+    //     return variable.startsWith('0') ? variable.slice(1) : undefined
+    //   else
+    //     return undefined;
+    // }
   },
   '-',
   {
@@ -222,34 +222,25 @@ export const telMask = createDynamicTextMask([
 ])
 
 export const emailMask = createDynamicTextMask([
-  {
-    mask: /\w|\-|\./,
-    exit: ( _, {remaining} ) => remaining[0] === '@'
-  },
+  { mask: /\w|\-|\./ },
   '@',
-  {
-    mask: /\w/,
-    exit: ( _, {remaining}) => remaining[0] === '.'
-  },
-  '.',
-  {
-    mask: /\w|\./
-  }
+  { mask: /\w|\-|\./ }
 ])
 
 export const domainMask = createDynamicTextMask([
-  {
-    mask: /[a-z]/i,
-  },
+  { mask: /[a-z]/i },
   '://',
-  // maskMayBe(
-  //   ({remaining}) => {
-
-  //   },
-  //   {
-  //     mask: /\w|\-/,
-
-  //   }
-  // ),
-
+  { mask: /\w|\-|\./ },
+  maskMaybe(
+    ({remaining}) => remaining[0] === '/',
+    [
+      '/',
+      {
+        mask: /\/|\w|\-/,
+        exit: ( _, {remaining}) => remaining[0] === '?'
+      }
+    ]
+  ),
+  '?',
+  { mask: /./ }
 ])

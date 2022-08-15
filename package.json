@@ -39,6 +39,6 @@
   "keywords": [
     "dynamic", "string", "text", "format", "mask", 
     "parse string", "string format", 
-    "tel format", "email format"
+    "tel format", "email format", "domain format"
   ]
 }

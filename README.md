@@ -18,7 +18,7 @@ $ yarn add @irony0901/dynamic-text-mask
 # Index
 * [ExampleEmailMask](#ExampleEmailMask)  
 * [ExampleDomainMask](#ExampleDomainMask)
-* [ExampleTelMask](#ExampleTelMask)   
+* [ExampleTelMask](#ExampleTelMask) (**detailed description, Deepening**)   
  
 # ExampleEmailMask
 ``` javascript
@@ -66,7 +66,7 @@ console.log( domainMask.parse('https://github.com').variables )
 console.log( domainMask.parse('https://github.com/irony1090/dynamic-text-mask?foo=bar&wow=amazing').variables )
 // [ 'https', 'github.com', 'irony1090/dynamic-text-mask', 'foo=bar&wow=amazing' ]
 
-console.log( domainMask.parse('https://github.com/irony1090?foo=bar&wow=amazing').variables )
+console.log( domainMask.parse('https://github.com?foo=bar&wow=amazing').variables )
 // [ 'https', 'github.com', '', 'foo=bar&wow=amazing' ]
 ```
 

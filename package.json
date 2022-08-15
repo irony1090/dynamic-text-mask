@@ -1,6 +1,6 @@
 {
   "name": "@irony0901/dynamic-text-mask",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "A library that helps you write text in the form you want",
   "browser": "./dist/index.js",
   "main": "./dist/index.cjs.js",

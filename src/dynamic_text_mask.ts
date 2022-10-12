@@ -173,16 +173,16 @@ const predictReduceVariables = (rst: { vals: Array<MaskVariable>, flats: Array<M
   return rst;
 }
 
-const parseLength = (funcOrNumber: number | ( (maskParam: MaskPredictParam) => number ), param: MaskPredictParam): number => {
-  return typeof funcOrNumber === 'function'
-    ? funcOrNumber(param)
-    : funcOrNumber;
-}
-const parseEmptyChar = (funcOrString: string | ( (maskParam: MaskPredictParam) => string ), param: MaskPredictParam): string => {
-  return typeof funcOrString === 'function'
-    ? funcOrString(param)
-    : (funcOrString||'');
-}
+// const parseLength = (funcOrNumber: number | ( (maskParam: MaskPredictParam) => number ), param: MaskPredictParam): number => {
+//   return typeof funcOrNumber === 'function'
+//     ? funcOrNumber(param)
+//     : funcOrNumber;
+// }
+// const parseEmptyChar = (funcOrString: string | ( (maskParam: MaskPredictParam) => string ), param: MaskPredictParam): string => {
+//   return typeof funcOrString === 'function'
+//     ? funcOrString(param)
+//     : (funcOrString||'');
+// }
 
 
 export const createDynamicTextMask = (format: Array<MaskElement>) => new DynamicTextMask(format);
